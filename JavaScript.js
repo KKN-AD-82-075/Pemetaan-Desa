@@ -20,13 +20,13 @@ countries.forEach(country => {
 		console.log(classList);
 		const selector = '.' + classList;
 		const matchingElements = document.querySelectorAll(selector);
-		matchingElements.forEach(el => el.style.fill = "#c99aff");
+		matchingElements.forEach(el => el.style.fill = "#e92021");
 	});
 	country.addEventListener("mouseout", function () {
 		const classList = [...this.classList].join('.');
 		const selector = '.' + classList;
 		const matchingElements = document.querySelectorAll(selector);
-		matchingElements.forEach(el => el.style.fill = "#443d4b")
+		matchingElements.forEach(el => el.style.fill = "#1a1a1a")
 	});
 	country.addEventListener("click", function(e) {
 		loading.innerText = "Loading...";

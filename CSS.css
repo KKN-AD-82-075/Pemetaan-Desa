@@ -23,7 +23,7 @@ body{
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: #dcbfff;
+	background: #e92021;
 }
 
 .world-map {
@@ -45,13 +45,13 @@ svg {
 }
 
 path {
-	fill: #443d4b;
-	stroke: #dcbfff;
+	fill: #1a1a1a;
+	stroke: #e92021;
 	transition: 100ms;
 }
 
 path:hover {
-	fill: #c99aff;
+	fill: #e92021;
 }
 
 .side-panel {
@@ -84,7 +84,7 @@ path:hover {
 	width: 5em;
 	height: 5em;
 	border: none;
-	background-color: #443d4b;
+	background-color: #1a1a1a;
 	color: #fff;
 	transition: 100ms;
 	cursor: pointer;
@@ -105,7 +105,7 @@ path:hover {
 }
 
 .close-btn:hover{
-	background-color: #c99aff;
+	background-color: ##e92021;
 }
 
 .country-flag {
@@ -150,7 +150,7 @@ path:hover {
 	width: 1.5em;
 	height: 1.5em;
 	font-size: 2em;
-	background-color: #443d4b;
+	background-color: #1a1a1a;
 	color: #fff;
 	border: 1px #dcbfff solid;
 	cursor: pointer;
@@ -162,7 +162,7 @@ path:hover {
 
 button:disabled {
 	background-color: #1d1a20;
-	border: 1px #443d4b solid;
+	border: 1px #1a1a1a solid;
 	cursor: default;
 	color: #333;
 }
