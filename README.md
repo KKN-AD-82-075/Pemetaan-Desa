@@ -1,5 +1,5 @@
 # Pemetaan Desa
-Peta digital bersifat digital yang menggambarkan Desa Karangduren.
+Peta digital interaktif yang menggambarkan Desa Karangduren.
 
 ## Anggota Tim
 | Nama                                                               | Peran              |
