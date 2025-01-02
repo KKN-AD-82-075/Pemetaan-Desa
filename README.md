@@ -10,4 +10,4 @@ Peta digital interaktif yang menggambarkan Desa Karangduren.
 ## 🌐 Website
 | Situs                                                               | Deskripsi                                                          |
 | ------------------------------------------------------------------  | ------------------------------------------------------------------ |
-| [Demo](https://kkn-ad-82-075-jelajahkebon.github.io/Pemetaan-Desa/) | Menggunakan [GitHub Pages](https://pages.github.com/).             |
+| [Demo](https://kkn-ad-82-075.github.io/Pemetaan-Desa/) | Menggunakan [GitHub Pages](https://pages.github.com/).                          |
