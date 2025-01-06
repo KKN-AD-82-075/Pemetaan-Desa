@@ -64,7 +64,7 @@ path:hover {
 	max-width: 30em;
 	height: 100vh;
 	transition: 
-		600ms cubic-bezier(0.77, 0, 0.18, 1);
+		transition: none !important;
 	overflow: scroll;
 	z-index: 1;
 }
@@ -105,7 +105,7 @@ path:hover {
 }
 
 .close-btn:hover{
-	background-color: #e92021;
+	background-color: ##e92021;
 }
 
 .country-flag {

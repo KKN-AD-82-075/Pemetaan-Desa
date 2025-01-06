@@ -14,96 +14,100 @@ const areaOutput = document.querySelector(".area");
 const currencyOutput = document.querySelector(".currency");
 const LanguagesOutput = document.querySelector(".languages");
 
-countries.forEach(country => {
-	country.addEventListener("mouseenter", function() {
-		const classList = [...this.classList].join('.');
-		console.log(classList);
-		const selector = '.' + classList;
-		const matchingElements = document.querySelectorAll(selector);
-		matchingElements.forEach(el => el.style.fill = "#e92021");
-	});
-	country.addEventListener("mouseout", function () {
-		const classList = [...this.classList].join('.');
-		const selector = '.' + classList;
-		const matchingElements = document.querySelectorAll(selector);
-		matchingElements.forEach(el => el.style.fill = "#1a1a1a")
-	});
-	country.addEventListener("click", function(e) {
-		loading.innerText = "Loading...";
-		container.classList.add("hide");
-		loading.classList.remove("hide");
-		let clickedCountryName;
-		if (e.target.hasAttribute("name")) {
-			clickedCountryName = e.target.getAttribute("name");
-		} else {
-			clickedCountryName = e.target.classList.value;
-		}
-		sidePanel.classList.add("side-panel-open");
-		fetch(`https://restcountries.com/v3.1/name/${clickedCountryName}?fullText=true`).then(response => {
-			if (!response.ok) {
-				throw new Error('Network Response was not ok');
-			}
-			return response.json();
-		})
-		.then(data => {
-			console.log(data);
-			setTimeout(() => {
-				countryNameOutput.innerText = data[0].name.common;
-				countryFlagOutput.src = data[0].flags.png;
-				cityOutput.innerText = data[0].capital;
-				const formatedNumber = data[0].area.toLocaleString('de-DE');
-				areaOutput.innerHTML = formatedNumber + `km<sup>2</sup>`;
-				const currencies = data[0].currencies;
-				currencyOutput.innerText = "";
-				Object.keys(currencies).forEach(key => {
-					currencyOutput.innerHTML += `<li>${currencies[key].name}</li>`
-				});
-				const languages = data[0].languages;
-				LanguagesOutput.innerText = "";
-				Object.keys(languages).forEach(key => {
-					LanguagesOutput.innerHTML += `<li>${languages[key]}</li>`
-				});
-				countryFlagOutput.onload = () => {
-					container.classList.remove("hide");
-					loading.classList.add("hide");
-				};
-			}, 500);
-		})
-		.catch(error=> {
-			loading.innerText = "No Data to Show for Selected Country";
-			console.error("There was a problem with the fetch operation:", error);
-		});
-	});
+let countryData = {};
+
+// Automatically load Excel data
+const loadExcelData = async () => {
+    try {
+        const response = await fetch('./Data.xlsx'); // Ensure the file is in the same directory
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const parsedData = XLSX.utils.sheet_to_json(sheet);
+
+        // Process data into a usable format
+        countryData = parsedData.reduce((acc, country) => {
+            acc[country.Name.toLowerCase()] = country; // Assuming "Name" column
+            return acc;
+        }, {});
+
+        console.log("Excel file loaded successfully!");
+    } catch (error) {
+        console.error("Error loading Excel file:", error);
+        loading.innerText = "Failed to load Excel data.";
+    }
+};
+
+// Call the function on page load
+loadExcelData();
+
+// Event listeners for map interactions
+countries.forEach((country) => {
+    country.addEventListener("mouseenter", function () {
+        const selector = "." + [...this.classList].join(".");
+        document.querySelectorAll(selector).forEach((el) => (el.style.fill = "#e92021"));
+    });
+
+    country.addEventListener("mouseout", function () {
+        const selector = "." + [...this.classList].join(".");
+        document.querySelectorAll(selector).forEach((el) => (el.style.fill = "#1a1a1a"));
+    });
+
+    country.addEventListener("click", function (e) {
+        loading.innerText = "Loading...";
+        container.classList.add("hide");
+        loading.classList.remove("hide");
+        console.log("Country clicked! Opening sidebar...");
+        sidePanel.classList.add("side-panel-open");
+
+        const clickedCountryName = e.target.getAttribute("name")?.toLowerCase() || e.target.classList.value.toLowerCase();
+        console.log("Clicked country name:", clickedCountryName); // Debug name
+
+        const data = countryData[clickedCountryName];
+        if (!data) {
+            console.error(`No data found for country: ${clickedCountryName}`);
+            loading.innerText = "No Data Available for Selected Country";
+            return;
+        }
+
+        setTimeout(() => {
+            countryNameOutput.innerText = data.Name;
+            countryFlagOutput.src = data.Flag; // Ensure Excel column has valid image URLs
+            cityOutput.innerText = data.Capital;
+            areaOutput.innerHTML = `${Number(data.Area).toLocaleString()} km<sup>2</sup>`;
+            currencyOutput.innerHTML = `<li>${data.Currency}</li>`;
+            LanguagesOutput.innerHTML = `<li>${data.Languages}</li>`;
+            countryFlagOutput.onload = () => {
+                container.classList.remove("hide");
+                loading.classList.add("hide");
+            };
+        }, 500);
+    });
 });
 
+// Close panel
 closeBtn.addEventListener("click", () => {
-	sidePanel.classList.remove("side-panel-open");
+    sidePanel.classList.remove("side-panel-open");
 });
 
+// Zoom controls
 let zoomValue = 100;
 zoomOutBtn.disabled = true;
+
 zoomInBtn.addEventListener("click", () => {
-	zoomOutBtn.disabled = false;
-	zoomValue += 100;
-	if (zoomValue < 500) {
-		zoomInBtn.disabled = false;
-	} else {
-		zoomInBtn.disabled = true;
-	}
-	map.style.width = zoomValue + "vw";
-	map.style.height = zoomValue + "vh";
-	zoomValueOutput.innerText = zoomValue + "%";
+    zoomOutBtn.disabled = false;
+    zoomValue += 100;
+    if (zoomValue >= 500) zoomInBtn.disabled = true;
+    map.style.width = zoomValue + "vw";
+    map.style.height = zoomValue + "vh";
+    zoomValueOutput.innerText = zoomValue + "%";
 });
 
 zoomOutBtn.addEventListener("click", () => {
-	zoomInBtn.disabled = false;
-	zoomValue -= 100;
-	if (zoomValue > 100) {
-		zoomOutBtn.disabled = false;
-	} else {
-		zoomOutBtn.disabled = true;
-	}
-	map.style.width = zoomValue + "vw";
-	map.style.height = zoomValue + "vh";
-	zoomValueOutput.innerText = zoomValue + "%";
+    zoomInBtn.disabled = false;
+    zoomValue -= 100;
+    if (zoomValue <= 100) zoomOutBtn.disabled = true;
+    map.style.width = zoomValue + "vw";
+    map.style.height = zoomValue + "vh";
+    zoomValueOutput.innerText = zoomValue + "%";
 });
