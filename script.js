@@ -1,113 +1,188 @@
 const map = document.querySelector("svg");
-const countries = document.querySelectorAll("path");
+const regions = document.querySelectorAll("path");
+const sawahElements = document.querySelectorAll(".sawah");
 const sidePanel = document.querySelector(".side-panel");
-const container = document.querySelector(".side-panel .container");
-const closeBtn = document.querySelector(".close-btn");
-const loading = document.querySelector(".loading");
-const zoomInBtn = document.querySelector(".zoom-in");
-const zoomOutBtn = document.querySelector(".zoom-out");
-const zoomValueOutput = document.querySelector(".zoom-value");
-const countryNameOutput = document.querySelector(".country-name");
-const countryFlagOutput = document.querySelector(".country-flag");
-const cityOutput = document.querySelector(".city");
-const areaOutput = document.querySelector(".area");
-const currencyOutput = document.querySelector(".currency");
-const LanguagesOutput = document.querySelector(".languages");
+const infoContainer = document.querySelector(".side-panel .container");
+const closeButton = document.querySelector(".close-btn");
+const loadingMessage = document.querySelector(".loading");
+const zoomInButton = document.querySelector(".zoom-in");
+const zoomOutButton = document.querySelector(".zoom-out");
+const zoomValueDisplay = document.querySelector(".zoom-value");
+const regionNameDisplay = document.querySelector(".name");
+const rwNumberDisplay = document.querySelector(".number");
+const rwHeadDisplay = document.querySelector(".head");
+const UMKMcategory = document.querySelector(".category");
+const UMKMowner = document.querySelector(".owner");
 
-let countryData = {};
+let regionData = {};
+let umkmData = {};
 
 // Automatically load Excel data
-const loadExcelData = async () => {
+const loadExcelData = async (filePath) => {
     try {
-        const response = await fetch('./Data.xlsx'); // Ensure the file is in the same directory
+        console.log(`Loading Excel file from: ${filePath}`);
+        const response = await fetch(filePath);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch file: ${filePath}`);
+        }
         const arrayBuffer = await response.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const parsedData = XLSX.utils.sheet_to_json(sheet);
-
-        // Process data into a usable format
-        countryData = parsedData.reduce((acc, country) => {
-            acc[country.Name.toLowerCase()] = country; // Assuming "Name" column
-            return acc;
-        }, {});
-
-        console.log("Excel file loaded successfully!");
+        if (!sheet) {
+            throw new Error("No sheet found in the Excel file.");
+        }
+        const data = XLSX.utils.sheet_to_json(sheet);
+        console.log(`Loaded data from ${filePath}:`, data);
+        return data;
     } catch (error) {
-        console.error("Error loading Excel file:", error);
-        loading.innerText = "Failed to load Excel data.";
+        console.error(`Error loading Excel file (${filePath}):`, error);
+        return [];
     }
 };
 
-// Call the function on page load
-loadExcelData();
+loadExcelData('./DataRW.xlsx')
+    .then(data => console.log("Data RW Loaded:", data))
+    .catch(err => console.error("Failed to load DataRW.xlsx:", err));
+
+loadExcelData('./DataUMKM.xlsx')
+    .then(data => console.log("Data UMKM Loaded:", data))
+    .catch(err => console.error("Failed to load DataUMKM.xlsx:", err));
+
+const loadAndSyncData = async () => {
+    try {
+        // Load data from Excel files
+        const rwData = await loadExcelData('./DataRW.xlsx');
+        const umkmDataRaw = await loadExcelData('./DataUMKM.xlsx');
+
+        // Populate regionData using Nomor RW
+        rwData.forEach((rw) => {
+            if (rw["Nomor RW"]) {
+                const rwNumberDisplay = rw["Nomor RW"];
+                regionData[rwNumberDisplay] = {
+                    name: rw["Nama RW"] || "-",
+                    number: rwNumberDisplay,
+                    head: rw["Kepala RW"] || "Tidak Diketahui",
+                    umkm: [],
+                };
+            }
+        });
+
+        // Map UMKM data to respective regions using Nomor RW
+        umkmDataRaw.forEach((umkm) => {
+            if (umkm["Nomor RW"]) {
+                const rwNumberDisplay = umkm["Nomor RW"];
+                if (regionData[rwNumberDisplay]) {
+                    regionData[rwNumberDisplay].umkm.push({
+                        owner: umkm["Pemilik UMKM"] || "Tidak Diketahui",
+                        category: umkm["Jenis UMKM"] || "Tidak Diketahui",
+                    });
+                }
+            }
+        });
+
+        console.log("Data synchronized successfully using Nomor RW:", regionData);
+    } catch (error) {
+        console.error("Error synchronizing data:", error);
+    }
+};
+
+// Call the function to load and sync data
+loadAndSyncData();
+
 
 // Event listeners for map interactions
-countries.forEach((country) => {
-    country.addEventListener("mouseenter", function () {
-        const selector = "." + [...this.classList].join(".");
-        document.querySelectorAll(selector).forEach((el) => (el.style.fill = "#e92021"));
-    });
-
-    country.addEventListener("mouseout", function () {
-        const selector = "." + [...this.classList].join(".");
-        document.querySelectorAll(selector).forEach((el) => (el.style.fill = "#1a1a1a"));
-    });
-
-    country.addEventListener("click", function (e) {
-        loading.innerText = "Loading...";
-        container.classList.add("hide");
-        loading.classList.remove("hide");
-        console.log("Country clicked! Opening sidebar...");
+regions.forEach((region) => {
+    // Click event for loading data
+    region.addEventListener("click", function (e) {
+        // Show loading message
+        loadingMessage.innerText = "Loading...";
+        infoContainer.classList.add("hide");
+        loadingMessage.classList.remove("hide");
         sidePanel.classList.add("side-panel-open");
 
-        const clickedCountryName = e.target.getAttribute("name")?.toLowerCase() || e.target.classList.value.toLowerCase();
-        console.log("Clicked country name:", clickedCountryName); // Debug name
-
-        const data = countryData[clickedCountryName];
-        if (!data) {
-            console.error(`No data found for country: ${clickedCountryName}`);
-            loading.innerText = "No Data Available for Selected Country";
+        // Get the clicked region's RW number
+        const clickedRegionNumber = e.target.getAttribute("number") || e.target.classList.value;
+        if (!clickedRegionNumber) {
+            loadingMessage.innerText = "No Data Available for Selected Region";
             return;
         }
 
+        // Retrieve region data
+        const data = regionData[clickedRegionNumber];
+        if (!data) {
+            console.error(`No data found for region: ${clickedRegionNumber}`);
+            loadingMessage.innerText = "No Data Available for Selected Region";
+            return;
+        }
+
+        // Render data to the sidebar
         setTimeout(() => {
-            countryNameOutput.innerText = data.Name;
-            countryFlagOutput.src = data.Flag; // Ensure Excel column has valid image URLs
-            cityOutput.innerText = data.Capital;
-            areaOutput.innerHTML = `${Number(data.Area).toLocaleString()} km<sup>2</sup>`;
-            currencyOutput.innerHTML = `<li>${data.Currency}</li>`;
-            LanguagesOutput.innerHTML = `<li>${data.Languages}</li>`;
-            countryFlagOutput.onload = () => {
-                container.classList.remove("hide");
-                loading.classList.add("hide");
-            };
+            regionNameDisplay.innerText = data.name;
+            rwNumberDisplay.innerText = `${data.number}`;
+            rwHeadDisplay.innerText = `${data.head}`;
+
+            // Display UMKM data
+            const umkmList = data.umkm.map(
+                (umkm) =>
+                    `<li><strong>${umkm.owner}</strong> (${umkm.category})</li>`
+            ).join("");
+
+            const umkmContainer = document.querySelector(".umkm-list");
+            umkmContainer.innerHTML = umkmList.length > 0 ? umkmList : "<li>Tidak ada data UMKM</li>";
+
+            // Hide loading message and show the container
+            infoContainer.classList.remove("hide");
+            loadingMessage.classList.add("hide");
         }, 500);
+    });
+
+    // Hover effects for regions
+    region.addEventListener("mouseenter", function () {
+        const classList = [...this.classList].join('.');
+        console.log(`Hovered region class list: ${classList}`);
+        const selector = '.' + classList;
+        const matchingElements = document.querySelectorAll(selector);
+
+        // Apply hover styles
+        matchingElements.forEach(el => el.style.fill = "#c99aff");
+        matchingElements.forEach(el => el.style.fill = "#e92021");
+    });
+
+    region.addEventListener("mouseout", function () {
+        const classList = [...this.classList].join('.');
+        const selector = '.' + classList;
+        const matchingElements = document.querySelectorAll(selector);
+
+        // Reset styles on hover out
+        matchingElements.forEach(el => el.style.fill = "#443d4b");
+        matchingElements.forEach(el => el.style.fill = "#1a1a1a");
     });
 });
 
+
 // Close panel
-closeBtn.addEventListener("click", () => {
+closeButton.addEventListener("click", () => {
     sidePanel.classList.remove("side-panel-open");
 });
 
 // Zoom controls
-let zoomValue = 100;
-zoomOutBtn.disabled = true;
+let zoomLevel = 100;
+zoomOutButton.disabled = true;
 
-zoomInBtn.addEventListener("click", () => {
-    zoomOutBtn.disabled = false;
-    zoomValue += 100;
-    if (zoomValue >= 500) zoomInBtn.disabled = true;
-    map.style.width = zoomValue + "vw";
-    map.style.height = zoomValue + "vh";
-    zoomValueOutput.innerText = zoomValue + "%";
+zoomInButton.addEventListener("click", () => {
+    zoomOutButton.disabled = false;
+    zoomLevel += 100;
+    if (zoomLevel >= 500) zoomInButton.disabled = true;
+    map.style.width = zoomLevel + "vw";
+    map.style.height = zoomLevel + "vh";
+    zoomValueDisplay.innerText = zoomLevel + "%";
 });
 
-zoomOutBtn.addEventListener("click", () => {
-    zoomInBtn.disabled = false;
-    zoomValue -= 100;
-    if (zoomValue <= 100) zoomOutBtn.disabled = true;
-    map.style.width = zoomValue + "vw";
-    map.style.height = zoomValue + "vh";
-    zoomValueOutput.innerText = zoomValue + "%";
+zoomOutButton.addEventListener("click", () => {
+    zoomInButton.disabled = false;
+    zoomLevel -= 100;
+    if (zoomLevel <= 100) zoomOutButton.disabled = true;
+    map.style.width = zoomLevel + "vw";
+    map.style.height = zoomLevel + "vh";
+    zoomValueDisplay.innerText = zoomLevel + "%";
 });

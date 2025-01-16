@@ -54,6 +54,9 @@ path:hover {
 	fill: #e92021;
 }
 
+path:sawah {
+	fill: #7CFC00;
+}
 .side-panel {
 	position: fixed;
 	background-color: #1d1a20;
