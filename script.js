@@ -80,6 +80,18 @@ const loadAndSyncData = async () => {
             }
         });
 
+        document.querySelectorAll('path.sawah').forEach((sawahElement) => {
+            const sawahData = {
+                type: "Sawah",
+                description: "This is a predefined sawah area, data is static.",
+                crops: ["Padi", "Jagung"],
+                status: "Irrigated",
+            };
+            console.log("Sawah element data:", sawahData);
+            // You can add custom rendering or handling here for the sawah elements
+            sawahElement.dataset.info = JSON.stringify(sawahData);
+        });
+
         console.log("Data synchronized successfully using Nomor RW:", regionData);
     } catch (error) {
         console.error("Error synchronizing data:", error);
@@ -100,6 +112,31 @@ regions.forEach((region) => {
         loadingMessage.classList.remove("hide");
         sidePanel.classList.add("side-panel-open");
 
+        // Check if the clicked region is a 'sawah'
+        if (region.classList.contains("sawah")) {
+            const sawahData = {
+                type: "Sawah",
+                description: "Sawah Desa Karangduren.",
+                crops: ["Padi"]
+            };
+
+            // Render sawah data to the sidebar
+            setTimeout(() => {
+                regionNameDisplay.innerText = "Area Sawah";
+                rwNumberDisplay.innerText = sawahData.description;
+                rwHeadDisplay.innerText = `Jenis Jenis Tumbuhan: ${sawahData.crops}`
+
+                const umkmContainer = document.querySelector(".umkm-list");
+                umkmContainer.innerHTML = "<li>Jamur, Hewan Peternakan, dan Buah</li>";
+
+                // Hide loading message and show the container
+                infoContainer.classList.remove("hide");
+                loadingMessage.classList.add("hide");
+            }, 500);
+
+            return; // Exit further processing for sawah
+        }
+
         // Get the clicked region's RW number
         const clickedRegionNumber = e.target.getAttribute("number") || e.target.classList.value;
         if (!clickedRegionNumber) {
@@ -115,18 +152,17 @@ regions.forEach((region) => {
             return;
         }
 
-        // Render data to the sidebar
+        // Render region data to the sidebar
         setTimeout(() => {
             regionNameDisplay.innerText = data.name;
-            rwNumberDisplay.innerText = `${data.number}`;
-            rwHeadDisplay.innerText = `${data.head}`;
+            rwNumberDisplay.innerText = `Nomor RW: ${data.number}`;
+            rwHeadDisplay.innerText = `Ketua RW: ${data.head}`;
 
             // Display UMKM data
             const umkmList = data.umkm.map(
                 (umkm) =>
                     `<li><strong>${umkm.owner}</strong> (${umkm.category})</li>`
             ).join("");
-
             const umkmContainer = document.querySelector(".umkm-list");
             umkmContainer.innerHTML = umkmList.length > 0 ? umkmList : "<li>Tidak ada data UMKM</li>";
 
@@ -136,26 +172,33 @@ regions.forEach((region) => {
         }, 500);
     });
 
-    // Hover effects for regions
+    // Hover effects for regions (unchanged)
     region.addEventListener("mouseenter", function () {
-        const classList = [...this.classList].join('.');
-        console.log(`Hovered region class list: ${classList}`);
-        const selector = '.' + classList;
+        const classList = [...this.classList];
+        const selector = '.' + classList.join('.');
         const matchingElements = document.querySelectorAll(selector);
 
-        // Apply hover styles
-        matchingElements.forEach(el => el.style.fill = "#c99aff");
-        matchingElements.forEach(el => el.style.fill = "#e92021");
+        matchingElements.forEach(el => {
+            if (el.classList.contains('sawah')) {
+                el.style.fill = "#00ff00"; // Green for 'sawah'
+            } else {
+                el.style.fill = "#e92021"; // Default hover color
+            }
+        });
     });
 
     region.addEventListener("mouseout", function () {
-        const classList = [...this.classList].join('.');
-        const selector = '.' + classList;
+        const classList = [...this.classList];
+        const selector = '.' + classList.join('.');
         const matchingElements = document.querySelectorAll(selector);
 
-        // Reset styles on hover out
-        matchingElements.forEach(el => el.style.fill = "#443d4b");
-        matchingElements.forEach(el => el.style.fill = "#1a1a1a");
+        matchingElements.forEach(el => {
+            if (el.classList.contains('sawah')) {
+                el.style.fill = "#1a1a1a"; // Default color for 'sawah'
+            } else {
+                el.style.fill = "#1a1a1a"; // Default color for others
+            }
+        });
     });
 });
 
@@ -186,3 +229,4 @@ zoomOutButton.addEventListener("click", () => {
     map.style.height = zoomLevel + "vh";
     zoomValueDisplay.innerText = zoomLevel + "%";
 });
+

@@ -44,6 +44,7 @@ svg {
 	height: 10vh;
 }
 
+
 path {
 	fill: #1a1a1a;
 	stroke: #e92021;
@@ -54,9 +55,17 @@ path:hover {
 	fill: #e92021;
 }
 
-path:sawah {
-	fill: #7CFC00;
+path:unselectable {
+	pointer-events: none;
+    fill = #1a1a1a;
 }
+
+path:sawah {
+	pointer-events: visiblePainted;
+    fill = #1a1a1a;
+    cursor: default
+}
+
 .side-panel {
 	position: fixed;
 	background-color: #1d1a20;
