@@ -180,7 +180,7 @@ regions.forEach((region) => {
 
         matchingElements.forEach(el => {
             if (el.classList.contains('sawah')) {
-                el.style.fill = "#00ff00"; // Green for 'sawah'
+                el.style.fill = "#C0FF6D"; // Green for 'sawah'
             } else {
                 el.style.fill = "#e92021"; // Default hover color
             }
