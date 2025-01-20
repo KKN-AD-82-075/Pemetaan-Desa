@@ -26,22 +26,14 @@ body{
 	background: #e92021;
 }
 
-.world-map {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: max-content;
-	height: max-content;
-	min-height: 30em;
-	background-color: #151218;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
 
 svg {
-	width: 10vw;
-	height: 10vh;
+	position: fixed;
+	transform: scale(2.7);
+	width: 120vw;
+	height: 120vh;
+	top: -18.7vw;
+	right: -116vh;
 }
 
 
@@ -57,12 +49,12 @@ path:hover {
 
 path:unselectable {
 	pointer-events: none;
-    fill = #1a1a1a;
+    fill: #1a1a1a;
 }
 
 path:sawah {
 	pointer-events: visiblePainted;
-    fill = #1a1a1a;
+    fill: #1a1a1a;
     cursor: default
 }
 
@@ -75,8 +67,7 @@ path:sawah {
 	width: 100%;
 	max-width: 30em;
 	height: 100vh;
-	transition: 
-		transition: none !important;
+	transition: none !important;
 	overflow: scroll;
 	z-index: 1;
 }
@@ -117,7 +108,7 @@ path:sawah {
 }
 
 .close-btn:hover{
-	background-color: ##e92021;
+	background-color: #e92021;
 }
 
 .country-flag {
